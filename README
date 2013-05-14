@@ -20,8 +20,8 @@ GD module is an interface to the GD library written by Thomas Boutell.
     where PNG and JPEG are two of the formats accepted for inline images
     by most browsers.
 
-The GD library must be version 2.0.8 or higher (or you must choose version
-0.40 or earlier of this module, which supports 1.8.3 or higher).
+The GD library must be version 2.0.23 or higher (or you must choose an 
+earlier version of this module).
 
 The official home page of GD is currently:
 

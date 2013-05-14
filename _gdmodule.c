@@ -8,10 +8,18 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.56
+Revised 03/10/2005 by Chris Gonnerman
+    -- added support for GIF files.
+    -- the minimum gd library version for this gdmodule version is
+       2.0.23.
+
 version 0.55
 Revised 03/10/2005 by Chris Gonnerman
     -- corrected error in the gd.image() constructor, pointed out
        by Betty Li.  maybe this time I got it right.
+    -- the minimum gd library version for this gdmodule version is
+       2.0.22.
 
 version 0.54
 Revised 03/03/2005 by Chris Gonnerman
@@ -221,6 +229,19 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
         return NULL;
 
     switch(fmt) {
+    case 'f' : /* gif */
+#ifdef HAVE_LIBGIF
+        if (use_fileobj_write) {
+            filedata = gdImageGifPtr(img->imagedata, &filesize);
+        } else {
+            gdImageGif(img->imagedata, fp);
+        }
+#else
+        PyErr_SetString(PyExc_NotImplementedError,
+                    "GIF Support Not Available");
+        return NULL;
+#endif
+        break;
     case 'p' : /* png */
 #ifdef HAVE_LIBPNG
         if (use_fileobj_write) {
@@ -313,6 +334,12 @@ imageobject *makeGDImage(gdImagePtr imagedata)
 
 
 /*** I/O Methods ***/
+
+static PyObject *image_writegif(imageobject *self, PyObject *args)
+{
+    return write_file(self, args, 'f');
+}
+
 
 static PyObject *image_writepng(imageobject *self, PyObject *args)
 {
@@ -628,9 +655,7 @@ static PyObject *image_setantialiased(imageobject *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "i", &c))
         return NULL;
 
-#ifdef gdAntiAliased
     gdImageSetAntiAliased(self->imagedata, c);
-#endif
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1386,6 +1411,11 @@ static PyObject *image_getorigin(imageobject *self)
 
 static struct PyMethodDef image_methods[] = {
 
+ {"writeGif",    (PyCFunction)image_writegif,    1,
+    "writeGif(f)\n"
+    "write the image to f as a GIF, where f is either an open file object or a\n"
+    "file name."},
+
  {"writePng",    (PyCFunction)image_writepng,    1,
     "writePng(f)\n"
     "write the image to f as a PNG, where f is either an open file object or a\n"
@@ -1696,6 +1726,9 @@ static struct {
 
 } ext_table[] = {
 
+#ifdef HAVE_LIBGIF
+    {"gif",  gdImageCreateFromGif},
+#endif
 #ifdef HAVE_LIBPNG
     {"png",  gdImageCreateFromPng},
 #endif
@@ -1958,7 +1991,7 @@ static imageobject *newimageobject(PyObject *args)
         /* if we fall out, we didn't find the file type */
 
         PyErr_SetString(PyExc_IOError,
-            "unsupported file type (only .png|.jpeg|.jpg|.gd|.gd2|.xbm|.xpm accepted)");
+            "unsupported file type (only .gif|.png|.jpeg|.jpg|.gd|.gd2|.xbm|.xpm accepted)");
 
         Py_DECREF(self);
         return(NULL);
@@ -2141,10 +2174,8 @@ void DLLEXPORT init_gd(void)
 
     /* and the standard gd constants */
 
-#ifdef gdAntiAliased
     v = Py_BuildValue("i", gdAntiAliased);
     PyDict_SetItemString(d, "gdAntiAliased", v);
-#endif
 
     v = Py_BuildValue("i", gdBrushed);
     PyDict_SetItemString(d, "gdBrushed", v);

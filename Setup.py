@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 import os, glob, sys, string
 
 # version of this gdmodule package
-this_version = "0.55"
+this_version = "0.56"
 
 # directory existence tester
 
@@ -57,7 +57,7 @@ incdirs = dirtest([
 
 want_libs = [
     "gd",
-    "jpeg", "png", "z",
+    "jpeg", "png", "gif", "z",
     "X11", "Xpm",
     "ttf", "freetype",
 ]
