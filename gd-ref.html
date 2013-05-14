@@ -65,10 +65,18 @@ figure in a future version.</dd>
 <em>file</em> | <em>file</em>,<em>type</em> |
 (<em>w</em>,<em>h</em>))</dt>
 
-<dd>create GD image from <em>file</em>.(png|jpeg|gd|gd2|xbm|xpm),
-<em>file</em>, <em>type</em> (png|jpeg|gd|gd2|xbm|xpm), the existing 
-<em>image</em>, optionally resized to width <em>w</em> and height
-<em>h</em> or blank with width <em>w</em> and height <em>h</em></dd>
+<dd>create GD image from 
+    <ul>
+    <li><em>file</em>.(png|jpeg|gd|gd2|xbm|xpm),
+    <li><em>file</em> (a filename or file-like object with a read 
+        method), <em>type</em> (png|jpeg|gd|gd2|xbm|xpm) 
+    <li>the existing <em>image</em>, 
+        <ul>
+        <li>optionally resized to width <em>w</em> and height <em>h</em>
+        </ul>
+    <li>or blank with width <em>w</em> and height <em>h</em>
+    </ul>
+</dd>
 </dl>
 
 <h3>Image Object Methods</h3>
@@ -77,33 +85,43 @@ figure in a future version.</dd>
 <dt><code>writePng</code>(<em>f</em>)</dt>
 
 <dd>write the image to <em>f</em> as a PNG, where <em>f</em> is
-either an open file object or a file name.</dd>
+either an open file-like object or a file name.</dd>
 
 <dt><code>writeJpeg</code>(<em>f</em>, [ <em>q</em> ])</dt>
 
 <dd>write the image to <em>f</em> as a JPEG file, where <em>f</em> is
-either an open file object or a file name, and <em>q</em> is the quality
-value as an integer from 0 to 100.  If <em>q</em> is 0 or omitted,
-a default is used.</dd>
+either an open file-like object or a file name, and <em>q</em> is the 
+quality value as an integer from 0 to 100.  If <em>q</em> is 0 or 
+omitted, a default is used.</dd>
 
 <dt><code>writeGd</code>(<em>f</em>)</dt>
 
 <dd>write the image to <em>f</em> as a GD file, where <em>f</em> is
-either an open file object or a file name.</dd>
+either an open file-like object or a file name.</dd>
 
 <dt><code>writeGd2</code>(<em>f</em>, [ <em>c</em>, [ <em>fmt</em> ] ])</dt>
 
 <dd>write the image to <em>f</em> as a GD2 file, where <em>f</em> is
-either an open file object or a file name, c is the chunksize and fmt is
+either an open file-like object or a file name, c is the chunksize and fmt is
 the format.  See the GD 1.8.3 or later documentation for an explanation.
 Defaults will be supplied if omitted.</dd>
 
 <dt><code>writeWbmp</code>(<em>f</em>, [ <em>fg</em> ])</dt>
 
 <dd>write the image to <em>f</em> as a WBMP file, where <em>f</em> is
-either an open file object or a file name, and <em>fg</em> is the
+either an open file-like object or a file name, and <em>fg</em> is the
 index of the color to "set" in the result image (see the GD 1.8.3 or
 later documentation for details). <em>fg</em> defaults to 0 if omitted.</dd>
+
+<dt>
+<br>
+All of the above write methods accept either a filename, file
+object or a python object with a write() method. Use a StringIO
+object if you want to get the image data without writing it to
+a file (useful for web scripts that return generated images to
+the client).
+<br>&nbsp;
+</dt>
 
 <dt><code>setPixel</code>((<em>x</em>,<em>y</em>), <em>
 color</em>)</dt>
@@ -349,6 +367,18 @@ distribution. See gd.html for details.
 <p>
 
 <ul>
+
+<li>Version 0.42<br>
+Revised 06/10/2003 by Chris Gonnerman
+<ul>
+<li>
+implemented patch by Gregory P. Smith to support writing to
+arbitrary objects, superceding the patch in 0.41 from
+Andreas Rottman.  gddemo.py contains Rottman's example
+(which works with Smith's patched version) as well as an
+example (by me) of reading an image from a URL.  The 
+documentation was updated to reflect these changes.
+</ul>
 
 <li>Version 0.41<br>
 Revised 05/29/2003 by Chris Gonnerman

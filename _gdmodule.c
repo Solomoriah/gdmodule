@@ -8,6 +8,15 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.42
+Revised 06/10/2003 by Chris Gonnerman
+    -- implemented patch by Gregory P. Smith to support writing to
+       arbitrary objects, superceding the patch in 0.41 from
+       Andreas Rottman.  gddemo.py contains Rottman's example
+       (which works with Smith's patched version) as well as an
+       example (by me) of reading an image from a URL.  The 
+       documentation was updated to reflect these changes.
+
 version 0.41
 Revised 05/29/2003 by Chris Gonnerman
     -- implemented big patch by Andreas Rottmann to support writing 
@@ -125,19 +134,29 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
 {
     char *filename;
     PyObject *fileobj;
-    FILE *fp;
-    int closeme = 0;
+    FILE *fp = NULL;
+    int closeme = 0, use_fileobj_write = 0;
     int arg1 = -1, arg2 = -1;
+    int filesize = 0;
+    void *filedata = NULL;
 
     if(PyArg_ParseTuple(args, "O!|ii", &PyFile_Type, &fileobj, &arg1, &arg2)) {
         fp = PyFile_AsFile(fileobj);
-    } else if(PyErr_Clear(), PyArg_ParseTuple(args, "z", &filename, &arg1, &arg2)) {
+    } else if(PyErr_Clear(), PyArg_ParseTuple(args, "z|ii", &filename, &arg1, &arg2)) {
         if((fp = fopen(filename, "wb"))) {
             closeme = 1;
         } else {
             PyErr_SetFromErrno(PyExc_IOError);
             return NULL;
         }
+    } else if (PyErr_Clear(), PyArg_ParseTuple(args, "O|ii", &fileobj, &arg1, &arg2)) {
+        /* if we're passed a random object that has a write method we will
+         * attempt to call object.write(filedata) */
+        if (!PyObject_HasAttrString(fileobj, "write")) {
+            PyErr_SetString(ErrorObject, "first argument must be a file, string or object with a write method");
+            return NULL;
+        }
+        use_fileobj_write = 1;
     }
     else
         return NULL;
@@ -145,7 +164,11 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
     switch(fmt) {
     case 'p' : /* png */
 #ifdef HAVE_LIBPNG
-        gdImagePng(img->imagedata, fp);
+        if (use_fileobj_write) {
+            filedata = gdImagePngPtr(img->imagedata, &filesize);
+        } else {
+            gdImagePng(img->imagedata, fp);
+        }
 #else
         PyErr_SetString(PyExc_NotImplementedError,
                     "PNG Support Not Available");
@@ -154,7 +177,11 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
         break;
     case 'j' : /* jpeg */
 #ifdef HAVE_LIBJPEG
-        gdImageJpeg(img->imagedata, fp, arg1);
+        if (use_fileobj_write) {
+            filedata = gdImageJpegPtr(img->imagedata, &filesize, arg1);
+        } else {
+            gdImageJpeg(img->imagedata, fp, arg1);
+        }
 #else
         PyErr_SetString(PyExc_NotImplementedError,
                     "PNG Support Not Available");
@@ -162,23 +189,42 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
 #endif
         break;
     case 'g' : /* gd */
-        gdImageGd(img->imagedata, fp);
+        if (use_fileobj_write) {
+            filedata = gdImageGdPtr(img->imagedata, &filesize);
+        } else {
+            gdImageGd(img->imagedata, fp);
+        }
         break;
     case 'G' : /* gd2 */
         if(arg1 == -1) arg1 = 0;
         if(arg2 != GD2_FMT_RAW && arg2 != GD2_FMT_COMPRESSED)
             arg2 = GD2_FMT_COMPRESSED;
-        gdImageGd2(img->imagedata, fp, arg1, arg2);
+        if (use_fileobj_write) {
+            filedata = gdImageGd2Ptr(img->imagedata, arg1, arg2, &filesize);
+        } else {
+            gdImageGd2(img->imagedata, fp, arg1, arg2);
+        }
         break;
     case 'w' : /* wbmp */
         if(arg1 == -1)
             arg1 = 0;
-        gdImageWBMP(img->imagedata, arg1, fp);
+        if (use_fileobj_write) {
+            filedata = gdImageWBMPPtr(img->imagedata, &filesize, arg1);
+        } else {
+            gdImageWBMP(img->imagedata, arg1, fp);
+        }
         break;
     }
 
-    if(closeme)
+    if (use_fileobj_write || filedata) {
+        PyObject *noerr;
+        noerr = PyObject_CallMethod(fileobj, "write", "s#", filedata, filesize);
+        gdFree(filedata);
+        if (noerr == NULL)
+            return NULL;
+    } else if (closeme) {
         fclose(fp);
+    }
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1459,12 +1505,12 @@ static struct PyMethodDef image_methods[] = {
 
 
 /*
-** Table of file types understood
+** Table of file types understood to gd "constructors"
 */
 
 static struct {
     char *ext;
-    gdImagePtr (*func)();
+    gdImagePtr (*func)(FILE*);
 
 } ext_table[] = {
 
@@ -1483,11 +1529,121 @@ static struct {
     {NULL, NULL}
 };
 
+static struct {
+    char *ext;
+    gdImagePtr (*func)(gdIOCtxPtr);
 
+} ext_table_ctx[] = {
+
+#ifdef HAVE_LIBPNG
+    {"png",  gdImageCreateFromPngCtx},
+#endif
+#ifdef HAVE_LIBJPEG
+    {"jpeg", gdImageCreateFromJpegCtx},
+    {"jpg",  gdImageCreateFromJpegCtx},
+    {"jfif", gdImageCreateFromJpegCtx},
+#endif
+    {"gd",   gdImageCreateFromGdCtx},
+    {"gd2",  gdImageCreateFromGd2Ctx},
+
+    {NULL, NULL}
+};
+
+
+/*
+** Code to act as a gdIOCtx wrapper for a python file object
+** (read-only; write support would not be difficult to add)
+*/
+
+struct PyFileIfaceObj_gdIOCtx {
+    gdIOCtx ctx;
+    PyObject *fileIfaceObj;
+    PyObject *strObj;        // our reference to the data string we're currently
+};
+
+int PyFileIfaceObj_IOCtx_GetC(gdIOCtx *ctx)
+{
+    struct PyFileIfaceObj_gdIOCtx *pctx = (struct PyFileIfaceObj_gdIOCtx *)ctx;
+    if (pctx->strObj) {
+        Py_DECREF(pctx->strObj);
+        pctx->strObj = NULL;
+    }
+    pctx->strObj = PyObject_CallMethod(pctx->fileIfaceObj, "read", "i", 1);
+    if (!pctx->strObj || !PyString_Check(pctx->strObj)) {
+        return EOF;
+    }
+    if (PyString_GET_SIZE(pctx->strObj) == 1) {
+        return (int)(unsigned char)PyString_AS_STRING(pctx->strObj)[0];
+    }
+    return EOF;
+}
+
+int PyFileIfaceObj_IOCtx_GetBuf(gdIOCtx *ctx, void *data, int size)
+{
+    int err;
+    char *value;
+    struct PyFileIfaceObj_gdIOCtx *pctx = (struct PyFileIfaceObj_gdIOCtx *)ctx;
+    if (pctx->strObj) {
+        Py_DECREF(pctx->strObj);
+        pctx->strObj = NULL;
+    }
+    pctx->strObj = PyObject_CallMethod(pctx->fileIfaceObj, "read", "i", size);
+    if (!pctx->strObj) {
+        return 0;
+    }
+    err = PyString_AsStringAndSize(pctx->strObj, &value, &size);
+    if (err < 0) {
+        /* this throws away the python exception since the gd library
+         * won't pass it up properly.  gdmodule should create its own
+         * since the "file" couldn't be read properly.  */
+        PyErr_Clear();
+        return 0;
+    }
+    memcpy(data, value, size);
+    return size;
+}
+
+void PyFileIfaceObj_IOCtx_Free(gdIOCtx *ctx)
+{
+    struct PyFileIfaceObj_gdIOCtx *pctx = (struct PyFileIfaceObj_gdIOCtx *)ctx;
+    if (pctx->strObj) {
+        Py_DECREF(pctx->strObj);
+        pctx->strObj = NULL;
+    }
+    if (pctx->fileIfaceObj) {
+        Py_DECREF(pctx->fileIfaceObj);
+        pctx->fileIfaceObj = NULL;
+    }
+    /* NOTE: we leave deallocation of the ctx structure itself to outside
+     * code for memory allocation symmetry.  This function is safe to
+     * call multiple times (gd should call it + we call it to be safe). */
+}
+
+struct PyFileIfaceObj_gdIOCtx * alloc_PyFileIfaceObj_IOCtx(PyObject *fileIfaceObj)
+{
+    struct PyFileIfaceObj_gdIOCtx *pctx;
+    pctx = calloc(1, sizeof(struct PyFileIfaceObj_gdIOCtx));
+    if (!pctx)
+        return NULL;
+    pctx->ctx.getC = PyFileIfaceObj_IOCtx_GetC; 
+    pctx->ctx.getBuf = PyFileIfaceObj_IOCtx_GetBuf;
+    pctx->ctx.gd_free = PyFileIfaceObj_IOCtx_Free;
+    Py_INCREF(fileIfaceObj);
+    pctx->fileIfaceObj = fileIfaceObj;
+    return pctx;
+}
+
+void free_PyFileIfaceObj_IOCtx(struct PyFileIfaceObj_gdIOCtx *pctx)
+{
+    if (!pctx)
+        return;
+    assert(pctx->ctx.gd_free != NULL);
+    pctx->ctx.gd_free((gdIOCtxPtr)pctx);  // free its internal resources
+    free(pctx);
+}
 /*
 ** Code to create the imageobject
 */
-
 
 static imageobject *newimageobject(PyObject *args)
 {
@@ -1495,6 +1651,7 @@ static imageobject *newimageobject(PyObject *args)
     int xdim=0, ydim=0, i, trueColor=0;
     char *filename,*ext=0;
     FILE *fp;
+    PyObject *readObj;
 
     if(!(self = PyObject_NEW(imageobject, &Imagetype)))
         return NULL;
@@ -1624,6 +1781,50 @@ static imageobject *newimageobject(PyObject *args)
         Py_DECREF(self);
         return(NULL);
 
+    } else if(PyErr_Clear(), 
+        PyArg_ParseTuple(args, "Oz", &readObj, &ext)) 
+    {
+        struct PyFileIfaceObj_gdIOCtx *ourIOCtx = NULL;
+
+        if (!PyObject_HasAttrString(readObj, "read")) {
+            PyErr_SetString(ErrorObject, "non-Image objects must have a read() method");
+            Py_DECREF(self);
+            return NULL;
+        }
+
+        ourIOCtx = alloc_PyFileIfaceObj_IOCtx(readObj);
+        if (!ourIOCtx) {
+            PyErr_NoMemory();
+            Py_DECREF(self);
+            return(NULL);
+        }
+
+        for(i = 0; ext_table_ctx[i].ext != NULL; i++) {
+
+            if(strcmp(ext, ext_table_ctx[i].ext) == 0) {
+
+                if(!(self->imagedata = ext_table_ctx[i].func((gdIOCtxPtr)ourIOCtx))) {
+                    free_PyFileIfaceObj_IOCtx(ourIOCtx);
+                    PyErr_SetString(PyExc_IOError,
+                        "corrupt or invalid image data (may be unsupported)");
+                    Py_DECREF(self);
+                    return(NULL);
+                }
+
+                free_PyFileIfaceObj_IOCtx(ourIOCtx);
+                return self;
+            }
+        }
+
+        /* if we fall out, we didn't find the file type */
+
+        PyErr_SetString(PyExc_IOError,
+            "unsupported file type (only png, jpeg, gd, & gd2 can be read from an object)");
+
+        free_PyFileIfaceObj_IOCtx(ourIOCtx);
+
+        Py_DECREF(self);
+        return(NULL);
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid argument list");
         Py_DECREF(self);
@@ -1661,8 +1862,8 @@ static PyObject *image_print(PyObject *self, FILE *fp, int flags)
     gdImagePtr im;
 
     im = ((imageobject *)self)->imagedata;
-    fprintf(fp,"<%dx%d image object at 0x%x>",gdImageSX(im),gdImageSY(im),
-      (unsigned)self);
+    fprintf(fp,"<%dx%d image object at 0x%lx>",gdImageSX(im),gdImageSY(im),
+      (unsigned long)self);
     return 0;
 }
 

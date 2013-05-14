@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gd, os
+import gd, os, cStringIO, urllib2
 
 os.environ["GDFONTPATH"] = "."
 
@@ -32,6 +32,16 @@ def simple():
     f=open("xx.jpg", "w")
     im.writeJpeg(f,100)
     f.close()
+
+    f=cStringIO.StringIO()
+    im.writePng(f)
+    print "PNG size:", len(f.getvalue())
+    f.close()
+    
+    f = urllib2.urlopen("http://www.gnu.org/graphics/gnu-head-sm.jpg")
+    im = gd.image(f, "jpg")
+    f.close()
+    print "GNU Image Size:", im.size()
 
 simple()
 
