@@ -8,6 +8,13 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.52
+Revised 02/03/2004 by Chris Gonnerman
+    -- incorporated new functions from the matplotlib project 
+       (provided by John Hunter)
+    -- corrected error in PyObject_HEAD_INIT() call noted by 
+       Stefan R Kuzminski (thanks!)
+
 version 0.51
 Revised 09/24/2003 by Chris Gonnerman
     -- fixed memory management bug reported by Jack Diederich.
@@ -535,6 +542,52 @@ static PyObject *image_setbrush(imageobject *self, PyObject *args)
 }
 
 
+static PyObject *image_setantialiased(imageobject *self, PyObject *args)
+{
+    int c;
+
+    if(!PyArg_ParseTuple(args, "i", &c))
+        return NULL;
+
+#ifdef gdAntiAliased
+    gdImageSetAntiAliased(self->imagedata, c);
+#endif
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+
+static PyObject *image_setclip(imageobject *self, PyObject *args)
+{
+    int tx,ty,bx,by,t;
+
+    if(!PyArg_ParseTuple(args, "(ii)(ii)", &tx, &ty, &bx, &by))
+        return NULL;
+
+    tx = X(tx); ty = Y(ty);
+    bx = X(bx); by = Y(by);
+
+    if(tx > bx) {
+        t = tx;
+        tx = bx;
+        bx = t;
+    }
+
+    if(ty > by) {
+        t = ty;
+        ty = by;
+        by = t;
+    }
+
+    gdImageSetClip(self->imagedata, tx, ty, bx, by);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
 static PyObject *image_settile(imageobject *self, PyObject *args)
 {
     imageobject *tile;
@@ -1010,6 +1063,13 @@ static PyObject *image_colorcomponents(imageobject *self, PyObject *args)
 }
 
 
+static PyObject *image_getclip(imageobject *self)
+{
+    int x1, y1, x2, y2;
+    gdImageGetClip(self->imagedata, &x1, &y1, &x2, &y2);
+    return Py_BuildValue("(ii)(ii)", x1, y1, x2, y2);
+}
+
 static PyObject *image_getinterlaced(imageobject *self)
 {
     return Py_BuildValue("i",gdImageGetInterlaced(self->imagedata));
@@ -1317,6 +1377,13 @@ static struct PyMethodDef image_methods[] = {
     "setBrush(image)\n"
     "set the drawing brush to <image> (use gdBrushed when drawing)"},
 
+ {"setAntiAliased",    (PyCFunction)image_setantialiased, 1,  "setAntiAliased(color)\n"
+    "Set the foreground color to be used when drawing antialiased lines.  Use the gdAntiAliased in place of the color when drawing"},
+
+ {"setClip",    (PyCFunction)image_setclip, 1,  "setClip((x1,y1), (x2,y2))\n"
+    "Set the image clipping rectangle"},
+
+
  {"setTile",    (PyCFunction)image_settile,    1,
     "setTile(image)\n"
     "set the fill tile to <image> (use gdTiled when filling)"},
@@ -1443,6 +1510,10 @@ static struct PyMethodDef image_methods[] = {
  {"colorComponents",    (PyCFunction)image_colorcomponents,    1,
     "colorComponents(color)\n"
     "returns a 3-tulple of the (r,g,b) components of color"},
+
+ {"getClip",    (PyCFunction)image_getclip,    1,
+    "getClip()\n"
+    "returns (x1,y1), (x2,y2) of the image clip rectange"},
 
  {"getInterlaced",    (PyCFunction)image_getinterlaced,    1,
     "getInterlaced()\n"
@@ -1877,7 +1948,7 @@ static PyObject *image_print(PyObject *self, FILE *fp, int flags)
 
 
 static PyTypeObject Imagetype = {
-    PyObject_HEAD_INIT(&PyType_Type)
+    PyObject_HEAD_INIT(NULL)
     0,                                  /*ob_size*/
     "image",                            /*tp_name*/
     sizeof(imageobject),                /*tp_basicsize*/
@@ -1966,6 +2037,12 @@ void init_gd(void)
     }
 
     /* and the standard gd constants */
+
+#ifdef gdAntiAliased
+    v = Py_BuildValue("i", gdAntiAliased);
+    PyDict_SetItemString(d, "gdAntiAliased", v);
+#endif
+
     v = Py_BuildValue("i", gdBrushed);
     PyDict_SetItemString(d, "gdBrushed", v);
 
