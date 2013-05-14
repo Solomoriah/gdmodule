@@ -1,10 +1,10 @@
 # Setup for gdmodule 0.50 and later
 
 from distutils.core import setup, Extension
-import os, glob, sys, string
+import os, glob, sys, string, commands
 
 # version of this gdmodule package
-this_version = "0.56"
+this_version = "0.57"
 
 # directory existence tester
 
@@ -45,6 +45,12 @@ libdirs = dirtest([
     "/opt/gnome/lib",
 ])
 
+try:
+    exotic_libdir = commands.getoutput("gdlib-config --libdir"),
+    libdirs += exotic_libdir
+except:
+    pass
+
 # include_dirs are also non-portable; same trick here.
 
 incdirs = dirtest([
@@ -52,6 +58,12 @@ incdirs = dirtest([
     "/usr/include/X11", "/usr/X11R6/include",
     "/opt/gnome/include",
 ])
+
+try:
+    exotic_incdir = commands.getoutput("gdlib-config --includedir"),
+    incdirs += exotic_incdir
+except:
+    pass
 
 # Try to identify our libraries
 
