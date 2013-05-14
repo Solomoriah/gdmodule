@@ -8,6 +8,11 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.55
+Revised 03/10/2005 by Chris Gonnerman
+    -- corrected error in the gd.image() constructor, pointed out
+       by Betty Li.  maybe this time I got it right.
+
 version 0.54
 Revised 03/03/2005 by Chris Gonnerman
     -- corrected error in the gd.image() constructor, pointed out
