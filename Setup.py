@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 import os, glob, sys, string
 
 # version of this gdmodule package
-this_version = "0.50"
+this_version = "0.51"
 
 # directory existence tester
 

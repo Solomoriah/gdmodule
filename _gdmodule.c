@@ -8,6 +8,10 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.51
+Revised 09/24/2003 by Chris Gonnerman
+    -- fixed memory management bug reported by Jack Diederich.
+
 version 0.50
 Revised 09/13/2003 by Chris Gonnerman
     -- documentation change only: the GD library must be version 
@@ -1852,8 +1856,6 @@ static void image_dealloc(imageobject *self)
     }
 
     if(self->imagedata) gdImageDestroy(self->imagedata);
-
-    PyMem_DEL(self);
 }
 
 
@@ -1876,24 +1878,24 @@ static PyObject *image_print(PyObject *self, FILE *fp, int flags)
 
 static PyTypeObject Imagetype = {
     PyObject_HEAD_INIT(&PyType_Type)
-    0,                    /*ob_size*/
-    "image",            /*tp_name*/
-    sizeof(imageobject),/*tp_basicsize*/
-    0,                    /*tp_itemsize*/
+    0,                                  /*ob_size*/
+    "image",                            /*tp_name*/
+    sizeof(imageobject),                /*tp_basicsize*/
+    0,                                  /*tp_itemsize*/
     /* methods */
-    (destructor)image_dealloc,        /*tp_dealloc*/
-    (printfunc)image_print,        /*tp_print*/
-    (getattrfunc)image_getattr,        /*tp_getattr*/
-    0,                    /*tp_setattr*/
-    0,                    /*tp_compare*/
-    0,                    /*tp_repr*/
-    0,                    /*tp_as_number*/
-    0,                    /*tp_as_sequence*/
-    0,                    /*tp_as_mapping*/
-    0,                    /*tp_hash*/
-    0,                    /*tp_call */
-    0,                    /*tp_str */
-    0,0,0,0,            /*tp_xxx1-4 */
+    (destructor)image_dealloc,          /*tp_dealloc*/
+    (printfunc)image_print,             /*tp_print*/
+    (getattrfunc)image_getattr,         /*tp_getattr*/
+    0,                                  /*tp_setattr*/
+    0,                                  /*tp_compare*/
+    0,                                  /*tp_repr*/
+    0,                                  /*tp_as_number*/
+    0,                                  /*tp_as_sequence*/
+    0,                                  /*tp_as_mapping*/
+    0,                                  /*tp_hash*/
+    0,                                  /*tp_call */
+    0,                                  /*tp_str */
+    0,0,0,0,                            /*tp_xxx1-4 */
 };
 
 
