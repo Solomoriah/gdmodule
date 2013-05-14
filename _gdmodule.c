@@ -8,6 +8,12 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.50
+Revised 09/13/2003 by Chris Gonnerman
+    -- documentation change only: the GD library must be version 
+       2.0.8 or higher (or you must choose version 0.40 or earlier 
+       of this module, which supports GD 1.8.3 or higher).
+
 version 0.42
 Revised 06/10/2003 by Chris Gonnerman
     -- implemented patch by Gregory P. Smith to support writing to

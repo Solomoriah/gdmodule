@@ -1,10 +1,10 @@
-# Setup for gdmodule 0.30 and later
+# Setup for gdmodule 0.50 and later
 
 from distutils.core import setup, Extension
 import os, glob, sys, string
 
 # version of this gdmodule package
-this_version = "0.42"
+this_version = "0.50"
 
 # directory existence tester
 
@@ -40,7 +40,7 @@ def remove(itm, lst):
 # Unixoid OS's I will just look for the usual suspects.
 
 libdirs = dirtest([
-    "/sw/lib", "/usr/lib", "/usr/local/lib", 
+    "/usr/local/lib", "/sw/lib", "/usr/lib",
     "/usr/lib/X11", "/usr/X11R6/lib",
     "/opt/gnome/lib",
 ])
@@ -48,7 +48,7 @@ libdirs = dirtest([
 # include_dirs are also non-portable; same trick here.
 
 incdirs = dirtest([
-    "/sw/include", "/usr/include", "/usr/local/include",
+    "/usr/local/include", "/sw/include", "/usr/include",
     "/usr/include/X11", "/usr/X11R6/include",
     "/opt/gnome/include",
 ])

@@ -1,8 +1,9 @@
 gd module install notes
 
-I'm going to assume that you've got the GD library installed, which is 
-pretty trivial to do. If you're having troubles with that, I suggest 
-you have a look at that package's instructions.
+I'm going to assume that you've got the GD library (version 2.0.8 or
+higher) installed, which is pretty trivial to do. If you're having 
+troubles with that, I suggest you have a look at that package's 
+instructions.
 
 This version of gdmodule is written assuming you have PNG, JPEG, FreeType, 
 and Xpm libraries incorporated into your copy of GD. If you have an 
