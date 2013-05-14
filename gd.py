@@ -16,6 +16,8 @@ del image
 class image:
 
     def __init__(self, *args):
+        if isinstance(args[0], image):
+            args[0] = args[0]._image
         self.__dict__["_image"] = _gd.image(*args)
 
     def __getattr__(self, name):

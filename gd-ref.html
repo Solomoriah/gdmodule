@@ -370,6 +370,29 @@ distribution. See gd.html for details.
 
 <ul>
 
+<li>Version 0.54<br>
+Revised 03/03/2005 by Chris Gonnerman
+<ul>
+<li>
+corrected error in the gd.image() constructor, pointed out
+by Betty Li.
+<li>
+corrected yet another obvious error reported by Greg Hewgill, 
+regarding an incorrect call to gdImagePolygon when fillcolor
+is not equal to 1.
+<li>
+implemented the saveAlpha and alphaBlending features as
+suggested by Christopher Stone.
+<li>
+fixed memory management issue regarding image deallocation
+reported by Matti Jagula.
+<li>
+fixed memory management issue in image_filledpolygon
+reported by Sadruddin Rejeb.
+<li>
+the minimum gd library version for this gdmodule version is 2.0.22.
+</ul>
+
 <li>Version 0.53<br>
 Revised 06/10/2004 by Chris Gonnerman
 <ul>
@@ -382,6 +405,8 @@ but this should be considered a "work in progress" in this version.
 corrected another obvious error (and an ancient one too) reported by Greg Hewgill,
 regarding the foreground color being used rather than the fill color in the image_polygon
 function.
+<li>
+the minimum gd library version for this gdmodule version is 2.0.22.
 </ul>
 
 <li>Version 0.52<br>

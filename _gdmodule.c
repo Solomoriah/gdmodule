@@ -8,6 +8,22 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.54
+Revised 03/03/2005 by Chris Gonnerman
+    -- corrected error in the gd.image() constructor, pointed out
+       by Betty Li.
+    -- corrected yet another obvious error reported by Greg Hewgill, 
+       regarding an incorrect call to gdImagePolygon when fillcolor
+       is not equal to 1.
+    -- implemented the saveAlpha and alphaBlending features as
+       suggested by Christopher Stone.
+    -- fixed memory management issue regarding image deallocation
+       reported by Matti Jagula.
+    -- fixed memory management issue in image_filledpolygon
+       reported by Sadruddin Rejeb.
+    -- the minimum gd library version for this gdmodule version is
+       2.0.22.
+
 version 0.53
 Revised 06/10/2004 by Chris Gonnerman
     -- corrected obvious error in image_settile(), as pointed out
@@ -19,6 +35,8 @@ Revised 06/10/2004 by Chris Gonnerman
        reported by Greg Hewgill, regarding the foreground color
        being used rather than the fill color in the image_polygon
        function.
+    -- the minimum gd library version for this gdmodule version is
+       2.0.22.
 
 version 0.52
 Revised 02/03/2004 by Chris Gonnerman
@@ -389,7 +407,7 @@ static PyObject *image_polygon(imageobject *self, PyObject *args)
 {
     PyObject *point, *points;
     gdPointPtr gdpoints;
-    int size, color, i, fillcolor=-1;
+    int size, color, i, fillcolor = -1;
 
     if(!PyArg_ParseTuple(args, "O!i|i", &PyTuple_Type, &points, &color, &fillcolor)) {
         PyErr_Clear();
@@ -410,7 +428,7 @@ static PyObject *image_polygon(imageobject *self, PyObject *args)
     }
 
     if(fillcolor != -1)
-        gdImagePolygon(self->imagedata, gdpoints, size, fillcolor);
+        gdImageFilledPolygon(self->imagedata, gdpoints, size, fillcolor);
 
     gdImagePolygon(self->imagedata, gdpoints, size, color);
 
@@ -479,6 +497,8 @@ static PyObject *image_filledpolygon(imageobject *self, PyObject *args)
     }
     gdImageFilledPolygon(self->imagedata, gdpoints, size, color);
     free(gdpoints);
+
+    Py_DECREF(points);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1329,6 +1349,19 @@ static PyObject *image_interlace(imageobject *self, PyObject *args)
 }
 
 
+static PyObject *image_savealpha(imageobject *self, PyObject *args)
+{
+    int i;
+
+    if(!PyArg_ParseTuple(args, "i", &i))
+        return NULL;
+    gdImageSaveAlpha(self->imagedata, i);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
 static PyObject *image_origin(imageobject *self, PyObject *args)
 {
     if(!PyArg_ParseTuple(args, "(ii)|ii",&self->origin_x,&self->origin_y,
@@ -1638,6 +1671,11 @@ static struct PyMethodDef image_methods[] = {
  {"getOrigin",    (PyCFunction)image_getorigin,    1,
     "getOrigin()\n"
     "returns the origin parameters ((x,y),xmult,ymult)"},
+
+ {"saveAlpha",    (PyCFunction)image_savealpha,    1,
+    "saveAlpha(n)\n"
+    "if n = 1, alpha channel information will be saved"
+    " (assuming the format supports it, i.e. PNG)"},
 
  {NULL,        NULL}        /* sentinel */
 };
@@ -1985,6 +2023,8 @@ static void image_dealloc(imageobject *self)
     }
 
     if(self->imagedata) gdImageDestroy(self->imagedata);
+
+    PyObject_DEL(self);
 }
 
 
