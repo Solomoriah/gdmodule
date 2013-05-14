@@ -4,7 +4,7 @@ import gd, os, cStringIO, urllib2
 
 os.environ["GDFONTPATH"] = "."
 
-FONT = "adventure"
+FONT = "Pacifico"
 
 def simple():
     im = gd.image((200, 200))

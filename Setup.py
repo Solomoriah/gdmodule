@@ -41,8 +41,9 @@ def remove(itm, lst):
 
 libdirs = dirtest([
     "/usr/local/lib", "/sw/lib", "/usr/lib",
+    "/usr/lib/i386-linux-gnu", "/usr/lib/x86_64-linux-gnu",
     "/usr/lib/X11", "/usr/X11R6/lib",
-    "/opt/gnome/lib", "/usr/lib/i386-linux-gnu",
+    "/opt/gnome/lib",
 ])
 
 try:
@@ -69,9 +70,9 @@ except:
 
 want_libs = [
     "gd",
-    "jpeg", "png", "gif", "z",
+    "jpeg", "png", "gif",
     "X11", "Xpm",
-    "ttf", "freetype",
+    "z", "ttf", "freetype",
 ]
 
 libs = filetest(libdirs, want_libs)
@@ -81,6 +82,9 @@ missing = []
 for l in want_libs:
     if l and l not in libs:
         missing.append(l)
+
+if "ttf" in missing and "freetype" not in missing:
+    remove("ttf", missing)
 
 if missing:
     print "WARNING:  Missing", string.join(missing, ", "), "Libraries"
@@ -127,4 +131,4 @@ setup(name="gdmodule", version=this_version,
             libraries=libs, define_macros=macros)],
 )
 
-# end of file... I guess we're done.
+# end of file.

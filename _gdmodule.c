@@ -149,7 +149,6 @@ Revised 11/22/2000 by Chris Gonnerman
 
 
 static PyObject *ErrorObject;
-extern int errno;
 
 /*
 ** Declarations for objects of type image
@@ -985,8 +984,8 @@ static PyObject *image_string_ttf(imageobject *self, PyObject *args)
 
 static PyObject *image_string(imageobject *self, PyObject *args)
 {
-    int x,y,font,color;
-    char *str;
+    int x, y, font, color;
+    unsigned char *str;
 
     if(!PyArg_ParseTuple(args, "i(ii)si", &font,&x,&y,&str,&color))
         return NULL;
@@ -1004,8 +1003,8 @@ static PyObject *image_string16(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)ui", &font,&x,&y,&ustr,&color))
         return NULL;
-    gdImageString16(self->imagedata, fonts[font].func(), X(x), Y(y), ustr,
-                    color);
+    gdImageString16(self->imagedata, fonts[font].func(), X(x), Y(y), 
+                    (short unsigned int *)ustr, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1014,8 +1013,8 @@ static PyObject *image_string16(imageobject *self, PyObject *args)
 
 static PyObject *image_stringup(imageobject *self, PyObject *args)
 {
-    int x,y,font,color;
-    char *str;
+    int x, y, font, color;
+    unsigned char *str;
 
     if(!PyArg_ParseTuple(args, "i(ii)si", &font,&x,&y,&str,&color))
         return NULL;
@@ -1034,7 +1033,7 @@ static PyObject *image_stringup16(imageobject *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "i(ii)ui", &font,&x,&y,&ustr,&color))
         return NULL;
     gdImageStringUp16(self->imagedata, fonts[font].func(), X(x), Y(y),
-                      ustr, color);
+                      (short unsigned int *)ustr, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1793,7 +1792,7 @@ int PyFileIfaceObj_IOCtx_GetC(gdIOCtx *ctx)
     return EOF;
 }
 
-int PyFileIfaceObj_IOCtx_GetBuf(gdIOCtx *ctx, void *data, int size)
+int PyFileIfaceObj_IOCtx_GetBuf(gdIOCtx *ctx, void *data, Py_ssize_t size)
 {
     int err;
     char *value;
