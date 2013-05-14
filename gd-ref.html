@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Python GD Module Reference</title>
+<style>
+    body    { font-family: arial, helvetica; }
+    code    { font-size: 110%; }
+</style>
+</head>
+<body>
+
+<h1>Python GD Module Reference</h1>
+
+<h3>Description</h3>
+
+GD module is an interface to the <a href=
+"http://www.boutell.com/gd/">GD library</a> written by Thomas
+Boutell. 
+
+<blockquote>
+'gd is a graphics library. It allows your code to quickly draw images complete
+with lines, arcs, text, multiple colors, cut and paste from other images, and
+flood fills, and write out the result as a PNG or JPEG file. This is
+particularly useful in World Wide Web applications, where PNG and JPEG are two
+of the formats accepted for inline images by most browsers.'
+</blockquote>
+
+It has been extended in some ways from the original GD library. 
+
+<p>
+<i>This documentation is slightly out of date.  In particular, the patch by
+Mike Romberg adds a lot of methods to the image object, which may not be fully
+documented here.  Use the Source, Luke.</i>
+
+<h3>Constants</h3>
+
+<dl>
+<dt>gdFontGiant, gdFontLarge, gdFontMediumBold, gdFontSmall,
+gdFontTiny</dt>
+
+<dd>Fonts for use with the string() and stringUp() methods.</dd>
+
+<dt>gdMaxColors(256)</dt>
+
+<dd>Maximum number of colors in an image; GD will likely change this
+figure in a future version.</dd>
+
+<dt>gdStyled, gdStyledBrushed, gdBrushed</dt>
+
+<dd>Draw mode for line() and lines() method.</dd>
+
+<dt>gdTiled</dt>
+
+<dd>Fill mode for fill(), fillToBorder()</dd>
+
+<dt>gdTransparent, gdStyledBrushed</dt>
+
+<dd>Special entries for setStyle()</dd>
+</dl>
+
+<h3>Image Object</h3>
+
+<dl>
+<dt><code>image</code>(<em>image</em>[,(<em>w</em>,<em>h</em>)] |
+<em>file</em> | <em>file</em>,<em>type</em> |
+(<em>w</em>,<em>h</em>))</dt>
+
+<dd>create GD image from <em>file</em>.(png|jpeg|gd|gd2|xbm|xpm),
+<em>file</em>, <em>type</em> (png|jpeg|gd|gd2|xbm|xpm), the existing 
+<em>image</em>, optionally resized to width <em>w</em> and height
+<em>h</em> or blank with width <em>w</em> and height <em>h</em></dd>
+</dl>
+
+<h3>Image Object Methods</h3>
+
+<dl>
+<dt><code>writePng</code>(<em>f</em>)</dt>
+
+<dd>write the image to <em>f</em> as a PNG, where <em>f</em> is
+either an open file object or a file name.</dd>
+
+<dt><code>writeJpeg</code>(<em>f</em>, [ <em>q</em> ])</dt>
+
+<dd>write the image to <em>f</em> as a JPEG file, where <em>f</em> is
+either an open file object or a file name, and <em>q</em> is the quality
+value as an integer from 0 to 100.  If <em>q</em> is 0 or omitted,
+a default is used.</dd>
+
+<dt><code>writeGd</code>(<em>f</em>)</dt>
+
+<dd>write the image to <em>f</em> as a GD file, where <em>f</em> is
+either an open file object or a file name.</dd>
+
+<dt><code>writeGd2</code>(<em>f</em>, [ <em>c</em>, [ <em>fmt</em> ] ])</dt>
+
+<dd>write the image to <em>f</em> as a GD2 file, where <em>f</em> is
+either an open file object or a file name, c is the chunksize and fmt is
+the format.  See the GD 1.8.3 or later documentation for an explanation.
+Defaults will be supplied if omitted.</dd>
+
+<dt><code>writeWbmp</code>(<em>f</em>, [ <em>fg</em> ])</dt>
+
+<dd>write the image to <em>f</em> as a WBMP file, where <em>f</em> is
+either an open file object or a file name, and <em>fg</em> is the
+index of the color to "set" in the result image (see the GD 1.8.3 or
+later documentation for details). <em>fg</em> defaults to 0 if omitted.</dd>
+
+<dt><code>setPixel</code>((<em>x</em>,<em>y</em>), <em>
+color</em>)</dt>
+
+<dd>set the pixel at (<em>x</em>,<em>y</em>) to <em>color</em></dd>
+
+<dt><code>line</code>((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), <em>color</em>)</dt>
+
+<dd>draw a line from (<em>x1</em>,<em>y1</em>) to
+(<em>x2</em>,<em>y2</em>) in <em>color</em></dd>
+
+<dt><code>lines</code>(((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), ..., (<em>xn</em>, <em>yn</em>)), <em>
+color</em>)</dt>
+
+<dd>draw a line along the sequence of points in the list or tuple
+using <em>color</em></dd>
+
+<dt><code>polygon</code>(((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), ..., (<em>xn</em>, <em>yn</em>)), <em>
+color</em>[, <em>fillcolor</em>])</dt>
+
+<dd>draw a polygon using the list or tuple of points (minimum 3) in
+<em>color</em>, optionally filled with <em>fillcolor</em></dd>
+
+<dt><code>rectangle</code>((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), <em>color</em>[, <em>
+fillcolor</em>])</dt>
+
+<dd>draw a rectangle with upper corner (<em>x1</em>,<em>y1</em>),
+lower corner (<em>x2</em>,<em>y2</em>) in <em>color</em>,
+optionally filled with <em>fillcolor</em></dd>
+
+<dt><code>filledPolygon</code>(((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), ..., (<em>xn</em>, <em>yn</em>)), <em>
+color</em>)</dt>
+
+<dd>draw a filled polygon using the list or tuple of points
+(minimum 3) in <em>color</em></dd>
+
+<dt><code>filledRectangle</code>((<em>x1</em>,<em>y1</em>),
+(<em>x2</em>,<em>y2</em>), <em>color</em>)</dt>
+
+<dd>draw a rectangle with upper corner (<em>x1</em>,<em>y1</em>),
+lower corner (<em>x2</em>,<em>y2</em>) in <em>color</em></dd>
+
+<dt><code>arc</code>((<em>x</em>,<em>y</em>),
+(<em>w</em>,<em>h</em>), <em>start</em>, <em>end</em>, <em>
+color</em>)</dt>
+
+<dd>draw an ellipse centered at (<em>x</em>,<em>y</em>) with width
+<em>w</em>, height <em>h</em> from <em>start</em> degrees to <em>
+end</em> degrees in <em>color</em>.</dd>
+
+<dt><code>fillToBorder</code>((<em>x</em>,<em>y</em>), <em>
+border</em>, <em>color</em>)</dt>
+
+<dd>flood from point (<em>x</em>,<em>y</em>) to <em>border</em>
+color in <em>color</em></dd>
+
+<dt><code>fill</code>((<em>x</em>,<em>y</em>), <em>color</em>)</dt>
+
+<dd>flood from point (<em>x</em>,<em>y</em>) in <em>color</em> for
+those pixels with the same color as the starting point</dd>
+
+<dt><code>setBrush</code>(<em>image</em>)</dt>
+
+<dd>set the drawing brush to <em>image</em> (use <strong>
+gdBrushed</strong> when drawing)</dd>
+
+<dt><code>setTile</code>(<em>image</em>)</dt>
+
+<dd>set the fill tile to <em>image</em> (use <strong>
+gdTiled</strong> when filling)</dd>
+
+<dt><code>setStyle</code>(<em>tuple</em>|<em>list</em>)</dt>
+
+<dd>set the line bit-style to <em>tuple</em> or <em>list</em> of
+colors (use gdStyled when drawing)</dd>
+
+<dt><code>getPixel</code>((<em>x</em>,<em>y</em>))</dt>
+
+<dd>color index of image at (<em>x</em>,<em>y</em>)</dd>
+
+<dt><code>boundsSafe</code>((<em>x</em>,<em>y</em>))</dt>
+
+<dd>returns true if (<em>x</em>,<em>y</em>) is within image</dd>
+
+<dt><code>size</code>()</dt>
+
+<dd>return the 2-tuple size of image</dd>
+
+<dt><code>string</code>(<em>font</em>, (<em>x</em>,<em>y</em>),
+<em>s</em>, <em>color</em>)</dt>
+
+<dd>draw string <em>s</em> at (<em>x</em>,<em>y</em>) using one of
+the pre-defined gdmodule fonts</dd>
+
+<dt><code>stringUp</code>(<em>font</em>, (<em>x</em>,<em>y</em>),
+<em>s</em>, <em>color</em>)</dt>
+
+<dd>vertically draw string <em>s</em> at (<em>x</em>,<em>y</em>)
+using one of the pre-defined gdmodule fonts</dd>
+
+<dt><code>get_bounding_rect</code>(<em>font</em>,
+<em>pointsize</em>, <em>angle</em>,
+(<em>x</em>,<em>y</em>), <em>s</em>)</dt>
+
+<dd>Get bounding rect of string <em>s</em> using the TrueType <em>font</em>
+at the given <em>pointsize</em> and <em>angle</em>.
+Returns
+the bounding box of the given text as an eight-tuple: lower left X,
+lower left Y, lower right X, lower right Y, upper right X,
+upper right Y, upper left X, upper left Y.
+
+<dt><code>string_ttf</code>(<em>font</em>, <em>pointsize</em>, <em>angle</em>,
+(<em>x</em>,<em>y</em>), <em>s</em>, <em>color</em>)</dt>
+
+<dd>draw string <em>s</em> at (<em>x</em>,<em>y</em>) using 
+the TrueType font at the given pointsize and angle.  
+Returns
+the bounding box of the given text as an eight-tuple: lower left X,
+lower left Y, lower right X, lower right Y, upper right X,
+upper right Y, upper left X, upper left Y.
+
+</dd>
+
+<dt><code>string_ft</code>(<em>font</em>, <em>pointsize</em>, <em>angle</em>,
+(<em>x</em>,<em>y</em>), <em>s</em>, <em>color</em>)</dt>
+
+<dd>
+Functional equivalent of <code>string_ttf</code>, which may be deprecated.
+</dd>
+
+<dt><code>
+colorAllocate</code>((<em>r</em>,<em>g</em>,<em>b</em>))</dt>
+
+<dd>allocate a color index to (<em>r</em>,<em>g</em>,<em>b</em>)
+(returns -1 if unable to)</dd>
+
+<dt><code>
+colorClosest</code>((<em>r</em>,<em>g</em>,<em>b</em>))</dt>
+
+<dd>return the color index closest to
+(<em>r</em>,<em>g</em>,<em>b</em>) (returns -1 if unable to)</dd>
+
+<dt><code>
+colorExact</code>((<em>r</em>,<em>g</em>,<em>b</em>))</dt>
+
+<dd>return an exact color index match for
+(<em>r</em>,<em>g</em>,<em>b</em>) (returns -1 if unable to)</dd>
+
+<dt><code>colorsTotal</code>()</dt>
+
+<dd>returns the number of colors currently allocated</dd>
+
+<dt><code>colorComponents</code>(<em>color</em>)</dt>
+
+<dd>returns a 3-tulple of the (r,g,b) components of color</dd>
+
+<dt><code>getInterlaced</code>()</dt>
+
+<dd>returns true if the image is interlaced</dd>
+
+<dt><code>getTransparent</code>()</dt>
+
+<dd>returns transparent color index or -1</dd>
+
+<dt><code>colorDeallocate</code>(<em>color</em>)</dt>
+
+<dd>deallocate <em>color</em> from the image palette</dd>
+
+<dt><code>colorTransparent</code>(<em>color</em>)</dt>
+
+<dd>set the transparent color to <em>color</em></dd>
+
+<dt><code>copyTo</code>(image[, (dx,dy)[, (sx,sy)[, (w,h)]]])</dt>
+
+<dd>copy from (<em>sx</em>,<em>sy</em>), width <em>sw</em> and
+height <em>sh</em> to destination <em>image</em>
+(<em>dx</em>,<em>dy</em>)</dd>
+
+<dt><code>copyResizedTo</code>(<em>image</em>[,
+(<em>dx</em>,<em>dy</em>)[, (<em>sx</em>,<em>sy</em>)[,
+(<em>dw</em>,<em>dh</em>)[, (<em>sw</em>,<em>sh</em>)]]]])</dt>
+
+<dd>copy from (<em>sx</em>,<em>sy</em>), width <em>sw</em> and
+height <em>sh</em> to destination <em>image</em>
+(<em>dx</em>,<em>dy</em>), width <em>dw</em> and height <em>
+dh</em></dd>
+
+<dt><code>interlace</code>()</dt>
+
+<dd>set the interlace bit</dd>
+
+<dt><code>
+origin</code>((<em>x</em>,<em>y</em>)[,<em>xmult</em>,<em>ymult</em>])</dt>
+
+<dd>set the origin of the image to (<em>x</em>,<em>y</em>) and
+multiply all x, y, width and height factors by <em>xmult</em> and
+<em>ymult</em> (typically either 1 or -1)</dd>
+
+<dt><code>getOrigin</code>()</dt>
+
+<dd>returns the origin parameters ((x,y),xmult,ymult)</dd>
+</dl>
+
+<h3>Other Module-level functions</h3>
+
+<dl>
+<dt><code>fontstrsize(<em>font</em>, <em>string</em>)</code></dt>
+
+<dd>return a tuple containing the size in pixels of the given <em>
+string</em> in the given <em>font</em></dd>
+</dl>
+
+<hr>
+
+Copyright &copy; 1995 Richard Jones, Bureau of Meteorology Australia.<br>
+richard@bofh.asn.au
+
+<p>
+With Richard's blessing, I have taken over support for this module;
+so, send all bug reports, etc. to
+<a href='mailto:chris.gonnerman@newcenturycomputers.net'>
+chris.gonnerman@newcenturycomputers.net</a>
+
+<p>
+
+This module is a python wrapper for the GD library (version 1.1.1)
+
+<p>
+From the GD docs:<br>
+"COPYRIGHT 1994 BY THE QUEST CENTER AT COLD SPRING HARBOR LABS. <br>
+Permission granted for unlimited use, provided that 
+the Quest Center at Cold Spring Harbor Labs is given
+credit for the library in the user-visible documentation of 
+your software. If you modify gd, we ask that you share the
+modifications with us so they can be added to the
+distribution. See gd.html for details.
+
+<p>
+
+<ul>
+<li>Version 0.40<br>
+Revised 09/18/2002 by Chris Gonnerman
+<ul>
+<li>updated to deal with incomplete library installs
+</ul>
+
+<li>Version 0.30<br>
+Revised 06/12/2002 by Chris Gonnerman
+<ul>
+<li>initial conversion to two-tier design
+</ul>
+
+<li>Version 0.26<br>
+Revised 12/10/2001 by Chris Gonnerman
+<ul>
+<li>made unicode optional via define Py_UNICODEOBJECT_H
+</ul>
+
+<li>Version 0.25<br>
+Revised 09/15/2001 by Chris Gonnerman
+<ul>
+<li>implemented patch by Mike Romberg:
+    <ul>
+    <li>adds additional image methods, available
+    only if GD 2.0.1+ is installed.
+    </ul>
+</ul>
+
+<li>Version 0.24<br>
+Revised 08/08/2001 by Chris Gonnerman
+<ul>
+<li>implemented patch by Mike Romberg:
+    <ul>
+    <li>supports GCC 3.0 and GD 2.0.1
+    <li>adds public C function makeGDImage()
+        <ul>
+        <li>It allows C or C++ code which uses the gd library
+        directly to make an imageobject instance.
+        </ul>
+    </ul>
+</ul>
+
+<li>Version 0.23<br>
+Revised 11/22/2000 by Chris Gonnerman
+<ul>
+<li>included the patch from Tanimoto Osamu<br>
+<li>updated support to GD version 1.8.3<br>
+<li>cleaned up code, added ANSI prototypes
+</ul>
+
+</ul>
+
+
+
+</body>
+</html>
+

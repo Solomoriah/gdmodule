@@ -1,0 +1,30 @@
+Python GD Module README
+
+--------------------------------------------------------------------------
+This module is
+
+    Copyright 1995 Richard Jones
+    Bureau of Meteorology Australia.
+    richard@bofh.asn.au
+
+With Richard's blessing, I have taken over support for this module;
+so, send all bug reports, etc. to chris.gonnerman@newcenturycomputers.net
+--------------------------------------------------------------------------
+
+GD module is an interface to the GD library written by Thomas Boutell. 
+
+    gd is a graphics library. It allows your code to quickly draw images 
+    complete with lines, arcs, text, multiple colors, cut and paste from 
+    other images, and flood fills, and write out the result as a PNG or 
+    JPEG file. This is particularly useful in World Wide Web applications,
+    where PNG and JPEG are two of the formats accepted for inline images
+    by most browsers.
+
+The official home page of GD is currently:
+
+    http://www.boutell.com/gd/
+
+gdmodule has been extended in some ways from the original GD library. 
+
+--------------------------------------------------------------------------
+

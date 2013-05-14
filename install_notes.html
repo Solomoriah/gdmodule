@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>gd module install notes</title>
+<style>
+    body    { font-family: arial, helvetica; }
+    code    { font-size: 110%; }
+</style>
+</head>
+<body>
+
+<h1>gd module install notes</h1>
+
+<p>
+I'm going to assume that you've got the GD library installed, which is 
+pretty trivial to do. If you're having troubles with that, I suggest 
+you have a look at that package's instructions.
+
+<p>
+Starting with version 0.40 of gdmodule, the Setup.py script tries rather hard to
+identify installed libraries.  Assuming you have GD installed normally, with
+development versions of all the libraries it uses, you are in good shape.  If
+you have build problems or runtime errors mentioning unknown functions, you
+probably either (a) don't have all the supporting libraries installed as
+development versions, or (b) have libraries installed that weren't used to build
+GD!
+
+<p>
+Libraries looked for are: X11, Xpm, png, z, jpeg, ttf, and/or freetype.  If both
+libttf and libfreetype are found, the libfreetype wins.  If either libpng or
+libz are missing, png support is not built; likewise for Xpm and X11.
+
+<p>
+Installation is done via the standard Distutils.  Do this (as root if necessary):
+
+<blockquote><code>
+    python Setup.py install
+</code></blockquote>
+
+<p>
+This should build the _gd.so extension and install it along with the gd.py
+module in the standard location on your system.
+
+<p>
+If you have had a previous version of gdmodule installed, in particular one
+which creates a monolithic gdmodule.so or gd.so, please remove it before
+building this one.
+
+<p>
+As of right now, I don't have a build for Windows.  If I get time I might
+put one together... don't hold your breath.  (If someone wants to build one for
+me I wouldn't cry about it...)
+
+
+
+</body>
+</html>
+

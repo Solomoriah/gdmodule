@@ -1,0 +1,21 @@
+gd module install notes
+
+I'm going to assume that you've got the GD library installed, which is 
+pretty trivial to do. If you're having troubles with that, I suggest 
+you have a look at that package's instructions.
+
+This version of gdmodule is written assuming you have PNG, JPEG, FreeType, 
+and Xpm libraries incorporated into your copy of GD. If you have an 
+incomplete version you will have difficulty getting this one to build.
+
+Starting with gdmodule 0.30 the installation is done via the standard 
+Distutils.  Do this (as root if necessary):
+
+    python Setup.py install
+
+This should build the _gd.so extension and install it along with the gd.py
+module in the standard location on your system.
+
+As of right now, I don't have a build for Windows.  If I get time I might
+put one together.
+
