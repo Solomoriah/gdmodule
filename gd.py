@@ -14,12 +14,16 @@ del image
 # proxy the _gd.image type as a class so we can override it.
 
 class image:
+
     def __init__(self, *args):
         self.__dict__["_image"] = _gd.image(*args)
+
     def __getattr__(self, name):
         return getattr(self._image, name)
+
     def __setattr__(self, name, value):
         return setattr(self._image, name, value)
+
     def lines(self, points, color):
         "draw a line along the sequence of points in the list or tuple using color"
         prev = tuple(points[0])
@@ -27,5 +31,32 @@ class image:
             p = tuple(p)
             self._image.line(prev, p, color)
             prev = p
+
+    def copyTo(self, im, *args):
+        return self._image.copyTo(im._image, *args)
+
+    def copyResizedTo(self, im, *args):
+        return self._image.copyResizedTo(im._image, *args)
+
+    def copyResampledTo(self, im, *args):
+        return self._image.copyResampledTo(im._image, *args)
+
+    def copyMergeTo(self, im, *args):
+        return self._image.copyMergeTo(im._image, *args)
+
+    def copyMergeGrayTo(self, im, *args):
+        return self._image.copyMergeGrayTo(im._image, *args)
+
+    def copyPaletteTo(self, im, *args):
+        return self._image.copyPaletteTo(im._image, *args)
+
+    def compare(self, im, *args):
+        return self._image.compare(im._image, *args)
+
+    def setBrush(self, im, *args):
+        return self._image.setBrush(im._image, *args)
+
+    def setTile(self, im, *args):
+        return self._image.setTile(im._image, *args)
 
 # end of file.

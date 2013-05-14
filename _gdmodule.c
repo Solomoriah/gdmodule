@@ -8,6 +8,18 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.41
+Revised 05/29/2003 by Chris Gonnerman
+    -- implemented big patch by Andreas Rottmann to support writing 
+       images to memory via StringIO/CStringIO.  Currently the only 
+       documentation is an example in gddemo.py.
+    -- implemented patch by Bob Galloway to remove the "specialness" 
+       of negative coordinates in the string_ttf/string_ft methods.
+    -- implemented patch by Nathan Robertson to enable MacOSX fink 
+       builds.
+    -- fixed bugs in the proxy class with regard to passing of 
+       _gd.image types.
+
 version 0.40
 Revised 09/18/2002 by Chris Gonnerman
     -- updated to deal with incomplete library installs
@@ -55,6 +67,9 @@ Revised 11/22/2000 by Chris Gonnerman
 #ifdef HAVE_LIBTTF
 #define HAVE_LIBFREETYPE
 #endif
+
+/* missing from gd.h */
+gdImagePtr gdImageCreateFromXpm(char *filename);
 
 static PyObject *ErrorObject;
 extern int errno;
@@ -705,13 +720,11 @@ static PyObject *image_string_ft(imageobject *self, PyObject *args)
       PyErr_SetString(PyExc_ValueError, rc);
       return NULL;
     }
-    if(x != -1 && y != -1) {
-        rc = gdImageStringTTF(self->imagedata, brect, fg, fontname,
-                ptsize, angle, x, y, str);
-        if(rc != NULL){
-            PyErr_SetString(PyExc_ValueError, rc);
-            return NULL;
-        }
+    rc = gdImageStringTTF(self->imagedata, brect, fg, fontname,
+            ptsize, angle, x, y, str);
+    if(rc != NULL){
+        PyErr_SetString(PyExc_ValueError, rc);
+        return NULL;
     }
 
     return Py_BuildValue("(iiiiiiii)",
@@ -743,13 +756,11 @@ static PyObject *image_string_ttf(imageobject *self, PyObject *args)
       PyErr_SetString(PyExc_ValueError, rc);
       return NULL;
     }
-    if(x != -1 && y != -1) {
-        rc = gdImageStringTTF(self->imagedata, brect, fg, fontname,
-                ptsize, angle, x, y, str);
-        if(rc != NULL){
-            PyErr_SetString(PyExc_ValueError, rc);
-            return NULL;
-        }
+    rc = gdImageStringTTF(self->imagedata, brect, fg, fontname,
+            ptsize, angle, x, y, str);
+    if(rc != NULL){
+        PyErr_SetString(PyExc_ValueError, rc);
+        return NULL;
     }
 
     return Py_BuildValue("(iiiiiiii)",
@@ -1414,7 +1425,7 @@ static struct PyMethodDef image_methods[] = {
     "than 100 the images are merged." },
 
  {"copyMergeGrayTo",    (PyCFunction)image_copymergegrayto,    1,
-    "copyMergeTo(image[, (dx,dy)[, (sx,sy)[, (w,h)]], pct])\n"
+    "copyMergeGrayTo(image[, (dx,dy)[, (sx,sy)[, (w,h)]], pct])\n"
     "copy from (sx,sy), width sw and height sh to destination image (dx,dy)\n"
     "If pct is 100 then this is equivalent to copyTo().  If pct is less\n"
     "than 100 the images are merged.  The hue is preserved by first\n"
@@ -1494,10 +1505,14 @@ static imageobject *newimageobject(PyObject *args)
     self->imagedata = NULL;
 
     if(PyArg_ParseTuple(args, "")) {
-        PyErr_SetString(PyExc_ValueError, "image size or source filename required");
+        PyErr_SetString(PyExc_ValueError, 
+            "image size or source filename required");
         Py_DECREF(self);
         return NULL;
-    } else if(PyErr_Clear(), PyArg_ParseTuple(args, "O!|(ii)i", &Imagetype, &srcimage, &xdim, &ydim, &trueColor)) {
+    } else if(PyErr_Clear(), 
+        PyArg_ParseTuple(args, "O!|(ii)i", 
+            &Imagetype, &srcimage, &xdim, &ydim, &trueColor)) 
+    {
         if(!xdim) xdim = gdImageSX(srcimage->imagedata);
         if(!ydim) ydim = gdImageSY(srcimage->imagedata);
 #if GD2_VERS <= 1
@@ -1523,15 +1538,30 @@ static imageobject *newimageobject(PyObject *args)
             gdImageCopyResized(self->imagedata,srcimage->imagedata,
                 0,0,0,0,xdim,ydim,gdImageSX(srcimage->imagedata),
                 gdImageSY(srcimage->imagedata));
-    } else if(PyErr_Clear(), PyArg_ParseTuple(args, "(ii)", &xdim, &ydim)) {
+    } else if(PyErr_Clear(), 
+        PyArg_ParseTuple(args, "(ii)|i", &xdim, &ydim, &trueColor)) 
+    {
         if(!xdim || !ydim) {
             PyErr_SetString(PyExc_ValueError, "dimensions cannot be 0");
             Py_DECREF(self);
             return NULL;
-        } if(!(self->imagedata = gdImageCreate(xdim,ydim))) {
-            Py_DECREF(self);
-            return NULL;
+        } 
+#if GD2_VERS <= 1
+        trueColor = 0;
+#endif
+        if (!trueColor){
+            if(!(self->imagedata = gdImageCreate(xdim,ydim))) {
+                Py_DECREF(self);
+                return NULL;
+            }
         }
+#if GD2_VERS > 1
+        else
+            if(!(self->imagedata = gdImageCreateTrueColor(xdim,ydim))) {
+                Py_DECREF(self);
+                return NULL;
+            }
+#endif
     } else if(PyErr_Clear(), PyArg_ParseTuple(args, "s|s", &filename, &ext)) {
 
         if(!ext) {

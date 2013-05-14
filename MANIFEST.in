@@ -1,0 +1,3 @@
+include *.html
+include gddemo.py
+include adventure.ttf
