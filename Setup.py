@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 import os, glob, sys, string, commands
 
 # version of this gdmodule package
-this_version = "0.57"
+this_version = "0.58"
 
 # directory existence tester
 
@@ -42,7 +42,7 @@ def remove(itm, lst):
 libdirs = dirtest([
     "/usr/local/lib", "/sw/lib", "/usr/lib",
     "/usr/lib/X11", "/usr/X11R6/lib",
-    "/opt/gnome/lib",
+    "/opt/gnome/lib", "/usr/lib/i386-linux-gnu",
 ])
 
 try:
