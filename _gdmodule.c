@@ -8,6 +8,18 @@ Please direct all questions and problems to me.
 
 This module is a python wrapper for the GD library (version 1.8.3)
 
+version 0.53
+Revised 06/10/2004 by Chris Gonnerman
+    -- corrected obvious error in image_settile(), as pointed out
+       by Dan Mosedale
+    -- applied some patches provided by John Hunter.  Several are
+       for Windows compatibility, but this should be considered
+       a "work in progress" in this version.
+    -- corrected another obvious error (and an ancient one too)
+       reported by Greg Hewgill, regarding the foreground color
+       being used rather than the fill color in the image_polygon
+       function.
+
 version 0.52
 Revised 02/03/2004 by Chris Gonnerman
     -- incorporated new functions from the matplotlib project 
@@ -95,7 +107,15 @@ Revised 11/22/2000 by Chris Gonnerman
 #endif
 
 /* missing from gd.h */
-gdImagePtr gdImageCreateFromXpm(char *filename);
+/* gdImagePtr gdImageCreateFromXpm(char *filename); */
+
+#ifdef WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
+#endif
+
+
 
 static PyObject *ErrorObject;
 extern int errno;
@@ -113,23 +133,22 @@ typedef struct i_o {
     struct i_o *current_tile;
 } imageobject;
 
+
+// 2.0.22 replaces gdFontTinyRep with gdFontGetTiny, and so on
+typedef gdFontPtr (*ptrGetFontFunction)();
 typedef struct {
     char *name;
-    gdFontPtr data;
+    ptrGetFontFunction func;
 } fontstruct;
 
-extern gdFont gdFontTinyRep;
-extern gdFont gdFontSmallRep;
-extern gdFont gdFontMediumBoldRep;
-extern gdFont gdFontLargeRep;
-extern gdFont gdFontGiantRep;
-
-static fontstruct fonts[] = {{"gdFontTiny",&gdFontTinyRep},
-{"gdFontSmall",&gdFontSmallRep},
-{"gdFontMediumBold",&gdFontMediumBoldRep},
-{"gdFontLarge",&gdFontLargeRep},
-{"gdFontGiant",&gdFontGiantRep},
-{NULL,NULL}};
+static fontstruct fonts[] = {
+  {"gdFontTiny",&gdFontGetTiny},
+  {"gdFontSmall",&gdFontGetSmall},
+  {"gdFontMediumBold",&gdFontGetMediumBold},
+  {"gdFontLarge",&gdFontGetLarge},
+  {"gdFontGiant",&gdFontGetGiant},
+  {NULL,NULL}
+};
 
 staticforward PyTypeObject Imagetype;
 
@@ -226,7 +245,7 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
         if(arg1 == -1)
             arg1 = 0;
         if (use_fileobj_write) {
-            filedata = gdImageWBMPPtr(img->imagedata, &filesize, arg1);
+	  //filedata = gdImageWBMPPtr(img->imagedata, &filesize, arg1);
         } else {
             gdImageWBMP(img->imagedata, arg1, fp);
         }
@@ -330,6 +349,41 @@ static PyObject *image_line(imageobject *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *image_lines(imageobject *self, PyObject *args)
+{
+    int color,i,N;
+    long sx,sy,ex,ey;
+    PyObject *seq;
+    PyObject *lastTup, *thisTup;
+
+    if(!PyArg_ParseTuple(args, "Oi", &seq, &color))
+        return NULL;
+
+    seq = PySequence_Fast(seq, NULL);
+    N = PySequence_Length(seq);
+    if (N<2) {
+      PyErr_SetString(PyExc_ValueError,
+                    "lines() requires sequence of len(2) or greater");
+      return NULL;
+    }
+    
+    lastTup = PySequence_GetItem(seq, 0);
+    sx = X(PyInt_AsLong(PySequence_GetItem(lastTup, 0)));
+    sy = Y(PyInt_AsLong(PySequence_GetItem(lastTup, 1)));
+
+    for (i=0; i<N; ++i) {
+      thisTup = PySequence_GetItem(seq, i);
+      ex = X(PyInt_AsLong(PySequence_GetItem(thisTup, 0)));
+      ey = Y(PyInt_AsLong(PySequence_GetItem(thisTup, 1)));
+      gdImageLine(self->imagedata, sx, sy, ex, ey, color);
+      sx = ex;
+      sy = ey;
+   }
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 static PyObject *image_polygon(imageobject *self, PyObject *args)
 {
@@ -356,7 +410,7 @@ static PyObject *image_polygon(imageobject *self, PyObject *args)
     }
 
     if(fillcolor != -1)
-        gdImagePolygon(self->imagedata, gdpoints, size, color);
+        gdImagePolygon(self->imagedata, gdpoints, size, fillcolor);
 
     gdImagePolygon(self->imagedata, gdpoints, size, color);
 
@@ -606,7 +660,7 @@ static PyObject *image_settile(imageobject *self, PyObject *args)
     }
 
     self->current_tile = tile;
-    gdImageSetBrush(self->imagedata, tile->imagedata);
+    gdImageSetTile(self->imagedata, tile->imagedata);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -753,7 +807,7 @@ static PyObject *image_char(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)ii", &font,&x,&y,&c,&color))
         return NULL;
-    gdImageChar(self->imagedata, fonts[font].data, X(x), Y(y), c, color);
+    gdImageChar(self->imagedata, fonts[font].func(), X(x), Y(y), c, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -767,7 +821,7 @@ static PyObject *image_charup(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)si", &font,&x,&y,&c,&color))
         return NULL;
-    gdImageCharUp(self->imagedata, fonts[font].data, X(x), Y(y), c, color);
+    gdImageCharUp(self->imagedata, fonts[font].func(), X(x), Y(y), c, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -886,7 +940,7 @@ static PyObject *image_string(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)si", &font,&x,&y,&str,&color))
         return NULL;
-    gdImageString(self->imagedata, fonts[font].data, X(x), Y(y), str, color);
+    gdImageString(self->imagedata, fonts[font].func(), X(x), Y(y), str, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -900,7 +954,7 @@ static PyObject *image_string16(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)ui", &font,&x,&y,&ustr,&color))
         return NULL;
-    gdImageString16(self->imagedata, fonts[font].data, X(x), Y(y), ustr,
+    gdImageString16(self->imagedata, fonts[font].func(), X(x), Y(y), ustr,
                     color);
 
     Py_INCREF(Py_None);
@@ -915,7 +969,7 @@ static PyObject *image_stringup(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)si", &font,&x,&y,&str,&color))
         return NULL;
-    gdImageStringUp(self->imagedata, fonts[font].data, X(x), Y(y), str, color);
+    gdImageStringUp(self->imagedata, fonts[font].func(), X(x), Y(y), str, color);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -929,7 +983,7 @@ static PyObject *image_stringup16(imageobject *self, PyObject *args)
 
     if(!PyArg_ParseTuple(args, "i(ii)ui", &font,&x,&y,&ustr,&color))
         return NULL;
-    gdImageStringUp16(self->imagedata, fonts[font].data, X(x), Y(y),
+    gdImageStringUp16(self->imagedata, fonts[font].func(), X(x), Y(y),
                       ustr, color);
 
     Py_INCREF(Py_None);
@@ -1329,6 +1383,10 @@ static struct PyMethodDef image_methods[] = {
  {"line",    (PyCFunction)image_line,    1,
     "line((x1,y1), (x2,y2), color)\n"
     "draw a line from (x1,y1) to (x2,y2) in color"},
+
+ {"lines",    (PyCFunction)image_lines,    1,
+    "line(seq, color)\n"
+    "seq is a list of x,y tuples.  Draw a connected line in color"},
 
 
  {"polygon",    (PyCFunction)image_polygon,    1,
@@ -1992,8 +2050,8 @@ static PyObject *gd_fontSSize(PyObject *self, PyObject *args)
 
     len = strlen(str);
 
-    return Py_BuildValue("(ii)", len*(fonts[font].data->w),
-                 fonts[font].data->h);
+    return Py_BuildValue("(ii)", len*(fonts[font].func()->w),
+                 fonts[font].func()->h);
 }
 
 
@@ -2017,7 +2075,7 @@ static struct PyMethodDef gd_methods[] = {
 
 /* Initialization function for the module (*must* be called init_gd) */
 
-void init_gd(void)
+void DLLEXPORT init_gd(void)
 {
     PyObject *m, *d, *v;
     int i=0;
