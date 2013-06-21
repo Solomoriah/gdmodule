@@ -1,11 +1,12 @@
-"""GD module is an interface to the GD library written by Thomas Bouttel.
-It allows your code to quickly draw images complete with lines, arcs,
-text, multiple colors, cut and paste from other images, and flood fills,
-and write out the result as a .PNG, .JPEG, or .WBMP file. This is
-particularly useful in World Wide Web applications, where .JPEG is
-universally supported and PNG is the up-and-coming format used for
-inline images. It has been extended in some ways from the original GD
-library."""
+"""
+    GD module is an interface to the GD library written by Thomas Bouttel.  It
+    allows your code to quickly draw images complete with lines, arcs, text,
+    multiple colors, cut and paste from other images, and flood fills, and
+    write out the result as a .GIF, .PNG, .JPEG, or .WBMP file. This is
+    particularly useful in World Wide Web applications, where .JPEG is
+    universally supported and PNG is the up-and-coming format used for inline
+    images. It has been extended in some ways from the original GD library.
+"""
 
 import _gd
 from _gd import *

@@ -263,7 +263,7 @@ static PyObject *write_file(imageobject *img, PyObject *args, char fmt)
         }
 #else
         PyErr_SetString(PyExc_NotImplementedError,
-                    "PNG Support Not Available");
+                    "JPEG Support Not Available");
         return NULL;
 #endif
         break;
@@ -2139,7 +2139,7 @@ static PyObject *gd_fontSSize(PyObject *self, PyObject *args)
 static struct PyMethodDef gd_methods[] = {
     {"image", gd_image, 1,
         "image(image[,(w,h)] | file | file,type | (w,h))\n"
-        "create GD image from file of type png, jpeg, gd, gd, gd2, xbm, or xpm.\n"
+        "create GD image from file of type gif, png, jpeg, gd, gd, gd2, xbm, or xpm.\n"
         "the existing image, optionally resized to width w and height h\n"
         "or blank with width w and height h"},
     {"fontstrsize", gd_fontSSize, 1,
